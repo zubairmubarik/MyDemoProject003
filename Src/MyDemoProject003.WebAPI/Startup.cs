@@ -37,9 +37,7 @@ namespace MyDemoProject003
             services.AddApplication();
             services.AddInfrastructure(Configuration);
             services.AddApplicationInsightsTelemetry();
-            // Configuration Options           
-           // services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
-
+            
             // Configuration Settings
             services.Configure<ServiceEndPoints>(Configuration.GetSection(nameof(ServiceEndPoints)));
             //services.Configure<ServiceEndPoints>(
