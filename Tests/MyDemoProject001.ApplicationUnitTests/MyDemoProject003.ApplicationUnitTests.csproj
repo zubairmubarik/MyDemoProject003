@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Src\MyDemoProject003.WebAPI\MyDemoProject003.WebAPI.csproj" />
+    <Folder Include="Customers\Command\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Customers\Command\" />
+    <ProjectReference Include="..\..\Src\MyDemoProject003.WebAPI\MyDemoProject003.WebAPI.csproj" />
   </ItemGroup>
 
 </Project>

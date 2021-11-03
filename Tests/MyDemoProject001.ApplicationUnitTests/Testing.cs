@@ -54,8 +54,15 @@ namespace MyDemoProject003.ApplicationUnitTests
 
          
         }
-            
 
+        public static IValidationClass GetValidationClass()
+        {
+            using var scope = _scopeFactory.CreateScope();
+
+            var service = scope.ServiceProvider.GetService<IValidationClass>();
+
+            return service;
+        }
 
         [OneTimeTearDown]
         public void RunAfterAnyTests()

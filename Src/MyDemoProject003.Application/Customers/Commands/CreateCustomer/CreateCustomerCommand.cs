@@ -9,6 +9,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using MyDemoProject003.Common.Utilities;
 using System;
+using MyDemoProject003.Application.Common.Helpers;
 
 namespace MyDemoProject003.Application.Customers.Commands.CreateCustomer
 {
@@ -26,15 +27,15 @@ namespace MyDemoProject003.Application.Customers.Commands.CreateCustomer
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
-        private readonly IMediator _mediator;
         private readonly ILogger _logger;
+        private readonly IValidationClass _validationClass;
 
-        public CreateCustomerCommandHandler(ICustomerRepository customerRepository, IMapper mapper, IMediator mediator, ILogger<CreateCustomerCommandHandler> logger)
+        public CreateCustomerCommandHandler(IValidationClass validationClass, ICustomerRepository customerRepository, IMapper mapper, ILogger<CreateCustomerCommandHandler> logger)
         {
             _customerRepository = customerRepository;
             _mapper = mapper;
-            _mediator = mediator;
             _logger = logger;
+            _validationClass = validationClass;
         }
         public async Task<ResponseDto<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
         {
@@ -45,9 +46,36 @@ namespace MyDemoProject003.Application.Customers.Commands.CreateCustomer
                 _logger.LogInformation("Executing Customer Handler");
 
                 //TODO: Business Validators must be implemented in FluentValidator
-                var isEligible = (customer.MonthlySalary > eligibleThreshold)
-                    && (customer.MonthlySalary > customer.MonthlyExpenses)
-                    && ((customer.MonthlySalary - customer.MonthlyExpenses) > eligibleThreshold);
+                var checkMandatoryFields = _validationClass.ValidateCustomerMandatoryFields(customer);
+
+                if (!checkMandatoryFields)
+                {
+                    return new ResponseDto<CustomerDto>()
+                    {
+                        Value = null,
+                        Description = $"Failed to create new record. Customer mandatory fields required.",
+                        ResponseCode = ResponseCode.BusinessError,
+                        IsError = true
+                    };
+                }
+
+                //TODO: Business Validators must be implemented in FluentValidator
+                var checkEmailValidaity = _validationClass.ValidateCustomerEmailFormat(customer.Email);
+
+                if (!checkEmailValidaity)
+                {
+                    return new ResponseDto<CustomerDto>()
+                    {
+                        Value = null,
+                        Description = $"Failed to create new record. Customer Email format is not correct.",
+                        ResponseCode = ResponseCode.BusinessError,
+                        IsError = true
+                    };
+                }
+
+
+                //TODO: Business Validators must be implemented in FluentValidator
+                var isEligible = _validationClass.ValidateCustomerThreshold(customer);
 
                 if (!isEligible)
                 {
@@ -73,6 +101,7 @@ namespace MyDemoProject003.Application.Customers.Commands.CreateCustomer
                     };
                 }
 
+                request.Customer.Credit = eligibleThreshold;
                 customer = await _customerRepository.CreateAsync(request.Customer, cancellationToken);               
             }
             catch (Exception eX)
